@@ -39,35 +39,39 @@ ui <- fluidPage(
    
    # Application title
    titlePanel("Old Faithful Geyser Data"),
-   
-   # Sidebar with a slider input for number of bins 
-   sidebarLayout(
-      sidebarPanel(
-         sliderInput("bins",
-                     "Number of bins:",
-                     min = 1,
-                     max = 50,
-                     value = 30),
-         # Copy the chunk below to make a group of checkboxes
+   conditionalPanel(
+     condition = 'true == true',
+     verbatimTextOutput('currentView')
+   ),
+   conditionalPanel(
+     condition = 'output.currentView != "industrySelectionPage"',
+     actionButton('prevPage', label = 'Back')
+   ),
+   conditionalPanel(
+     condition = 'output.currentView != "mapPage"',
+     actionButton("nextPage", label = "Next")
+   ),
+   conditionalPanel(
+     condition = 'output.currentView == "industrySelectionPage"',
+     sidebarLayout(
+       
+       sidebarPanel(
          checkboxGroupInput("industryChecklist",
                             label = h3("Industry Selector"), 
                             choiceNames=naicsLabels,
                             choiceValues=naicsCodes,
                             selected = naicsCodes[match(defaultValues$naicsCodes, naicsCodes)]),
-         
-         
+
          hr(),
          fluidRow(column(3, verbatimTextOutput("value"))),
          width=5
-      ),
-      
-      # Show a plot of the generated distribution
-      mainPanel(
-         #plotOutput("distPlot"),
-        verbatimTextOutput("test"),
+       ),
+
+       mainPanel(
+         verbatimTextOutput("test"),
          lapply(1:maxNaicsInputs, function(i) { uiOutput(paste0('naicsWtWidget', i)) })
-         #uiOutput('weightControls')
-      )
+       )
+     )
    )
 )
 
@@ -87,9 +91,7 @@ server <- function(input, output) {
   getTotalNaicsWt <- function () {
     total <- 0
     for (i in 1:maxNaicsInputs) {
-      #print(paste0('total: ', total))
       current <- getNthNaicsWt(i)
-      #print(paste0('current: ', current))
       if (is.null(current) || is.na(current)) current <- 0
       total <- current + total
     }
@@ -106,6 +108,15 @@ server <- function(input, output) {
   })
 
   output$test <- renderPrint({ paste0('TOTAL: ', getTotalNaicsWt()) })
+  output$currentView <- reactive({
+    pages <- c(
+      'industrySelectionPage',
+      'industryWeightsPage',
+      'mapPage'
+    )
+    stepsForward <- min(length(pages), max(0, input$nextPage + 1 - input$prevPage))
+    pages[stepsForward]
+  })
 }
 
 # Run the application 
