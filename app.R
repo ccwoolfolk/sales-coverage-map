@@ -16,7 +16,6 @@ source('defaultValues.R')
 mfg <- read_excel(
   paste('full-mfg.xlsx', sep=''),
   col_types = 'text'
-  #col_types = c('text', 'text', 'numeric', 'numeric', 'text', 'text', 'numeric', 'text', 'numeric', 'numeric', 'date', 'date', 'date', 'date', 'text', 'logical', 'logical', 'logical', rep('text', 4))
 )
 
 # Remove the header description row
@@ -24,7 +23,7 @@ mfg <- mfg[-1, ]
 
 ### Create a list of unique NAICS codes
 allNaicsCodes <- mfg %>% pull(NAICS.id)
-naicsCodes <- head(unique(allNaicsCodes), 20) # tmp trimming
+naicsCodes <- unique(allNaicsCodes)
 uniqueRows <- match(naicsCodes, allNaicsCodes)
 naicsNames <- (mfg %>% pull(`NAICS.display-label`))[uniqueRows]
 naicsLabels <- paste(str_pad(naicsCodes, width=max(nchar(naicsCodes)), side='right', '_'), naicsNames, sep=' : ')
@@ -34,13 +33,12 @@ source('ui/industrySelectionPage.R')
 source('ui/industryWeightsPage.R')
 source('ui/mapPage.R')
 
-# Define UI for application that draws a histogram
 ui <- fluidPage(
    titlePanel('Sales Coverage Visualization'),
    sidebarLayout(
      sidebarPanel(
        conditionalPanel(
-         condition = 'true == true',
+         condition = 'true',
          verbatimTextOutput('currentView')
        ),
        makeNavButtonContainerUI()
