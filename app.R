@@ -1,10 +1,3 @@
-defaultValues <- list(
-  naicsCodes=c(311211, 325193, 311111),
-  naicsWeights=c(50, 25, 25)
-)
-
-maxNaicsInputs <- 10
-
 library(shiny)
 library(stringr)
 library(readxl, quietly = TRUE, warn.conflicts = FALSE)
@@ -17,6 +10,8 @@ library(dplyr, quietly = TRUE, warn.conflicts = FALSE)
 #library(plotrix)
 #library(maps)
 #library(rlang)
+
+source('defaultValues.R')
 
 mfg <- read_excel(
   paste('full-mfg.xlsx', sep=''),
@@ -34,48 +29,39 @@ uniqueRows <- match(naicsCodes, allNaicsCodes)
 naicsNames <- (mfg %>% pull(`NAICS.display-label`))[uniqueRows]
 naicsLabels <- paste(str_pad(naicsCodes, width=max(nchar(naicsCodes)), side='right', '_'), naicsNames, sep=' : ')
 
+source('ui/navButtonContainer.R')
+source('ui/industrySelectionPage.R')
+source('ui/industryWeightsPage.R')
+source('ui/mapPage.R')
+
 # Define UI for application that draws a histogram
 ui <- fluidPage(
-   
-   # Application title
-   titlePanel("Old Faithful Geyser Data"),
-   conditionalPanel(
-     condition = 'true == true',
-     verbatimTextOutput('currentView')
-   ),
-   conditionalPanel(
-     condition = 'output.currentView != "industrySelectionPage"',
-     actionButton('prevPage', label = 'Back')
-   ),
-   conditionalPanel(
-     condition = 'output.currentView != "mapPage"',
-     actionButton("nextPage", label = "Next")
-   ),
-   conditionalPanel(
-     condition = 'output.currentView == "industrySelectionPage"',
-     sidebarLayout(
-       
-       sidebarPanel(
-         checkboxGroupInput("industryChecklist",
-                            label = h3("Industry Selector"), 
-                            choiceNames=naicsLabels,
-                            choiceValues=naicsCodes,
-                            selected = naicsCodes[match(defaultValues$naicsCodes, naicsCodes)]),
-
-         hr(),
-         fluidRow(column(3, verbatimTextOutput("value"))),
-         width=5
+   titlePanel('Sales Coverage Visualization'),
+   sidebarLayout(
+     sidebarPanel(
+       conditionalPanel(
+         condition = 'true == true',
+         verbatimTextOutput('currentView')
        ),
-
-       mainPanel(
-         verbatimTextOutput("test"),
-         lapply(1:maxNaicsInputs, function(i) { uiOutput(paste0('naicsWtWidget', i)) })
+       makeNavButtonContainerUI()
+     ),
+     mainPanel(
+       conditionalPanel(
+         condition = 'output.currentView == "industrySelectionPage"',
+         makeIndustrySelectionPageUI()
+       ),
+       conditionalPanel(
+         condition = 'output.currentView == "industryWeightsPage"',
+         makeIndustryWeightsPageUI()
+       ),
+       conditionalPanel(
+         condition = 'output.currentView == "mapPage"',
+         makeMapPageUI()
        )
      )
    )
 )
 
-# Define server logic required to draw a histogram
 server <- function(input, output) {
   # Create a list of text inputs for naics weights
   getNthNaicsCode <- function (i) {
@@ -90,7 +76,7 @@ server <- function(input, output) {
   
   getTotalNaicsWt <- function () {
     total <- 0
-    for (i in 1:maxNaicsInputs) {
+    for (i in 1:getMaxNaicsInputs()) {
       current <- getNthNaicsWt(i)
       if (is.null(current) || is.na(current)) current <- 0
       total <- current + total
@@ -99,7 +85,7 @@ server <- function(input, output) {
     return (total)
   }
 
-  lapply(1:maxNaicsInputs, function(i) {
+  lapply(1:getMaxNaicsInputs(), function(i) {
     output[[paste0('naicsWtWidget', i)]] <- renderUI({
       naics <- getNthNaicsCode(i)
       if (is.na(naics)) return()
@@ -107,7 +93,8 @@ server <- function(input, output) {
     })
   })
 
-  output$test <- renderPrint({ paste0('TOTAL: ', getTotalNaicsWt()) })
+  output$weightsTotalDisplay <- renderPrint({ paste0('TOTAL: ', getTotalNaicsWt()) })
+
   output$currentView <- reactive({
     pages <- c(
       'industrySelectionPage',
