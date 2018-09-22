@@ -37,6 +37,7 @@ ui <- fluidPage(
    titlePanel('Sales Coverage Visualization'),
    sidebarLayout(
      sidebarPanel(
+       width=3,
        conditionalPanel(
          condition = 'true',
          verbatimTextOutput('currentView')
