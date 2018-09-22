@@ -27,6 +27,10 @@ naicsCodes <- unique(allNaicsCodes)
 uniqueRows <- match(naicsCodes, allNaicsCodes)
 naicsNames <- (mfg %>% pull(`NAICS.display-label`))[uniqueRows]
 naicsLabels <- paste(str_pad(naicsCodes, width=max(nchar(naicsCodes)), side='right', '_'), naicsNames, sep=' : ')
+getNaicsLabels <- function(codes) {
+  idxs <- match(codes, table=naicsCodes)
+  return(naicsNames[idxs])
+}
 
 source('ui/navButtonContainer.R')
 source('ui/industrySelectionPage.R')
@@ -88,11 +92,22 @@ server <- function(input, output) {
     output[[paste0('naicsWtWidget', i)]] <- renderUI({
       naics <- getNthNaicsCode(i)
       if (is.na(naics)) return()
-      textInput(paste0('naicsWt', i), label = h3(paste0('weight for ', naics, ' goes here')), value = "0")
+      fluidRow(
+        column(width=2, textInput(paste0('naicsWt', i), value = "0", label=NULL)),
+        column(width=10, p(getNaicsLabels(naics)))
+      )
     })
   })
 
-  output$weightsTotalDisplay <- renderPrint({ paste0('TOTAL: ', getTotalNaicsWt()) })
+  output$industryWeightsTotal <- renderUI({
+    total <- round(getTotalNaicsWt(), 0)
+    baseContent <- tags$h3(paste0('Total weights: ', total, '%'))
+    if (total == 100) {
+      return(tagList(baseContent))
+    }
+    warningMessage <- tags$p(style='color: #FF0000;', 'Total should equal 100%.')
+    tagList(baseContent, warningMessage)
+  })
 
   output$currentView <- reactive({
     pages <- c(
