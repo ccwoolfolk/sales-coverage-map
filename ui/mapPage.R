@@ -1,3 +1,3 @@
 makeMapPageUI <- function () {
-  
+  imageOutput('mapImage')
 }

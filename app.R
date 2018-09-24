@@ -3,6 +3,7 @@ library(stringr)
 library(readxl, quietly = TRUE, warn.conflicts = FALSE)
 library(tidyr, quietly = TRUE, warn.conflicts = FALSE)
 library(dplyr, quietly = TRUE, warn.conflicts = FALSE)
+library(demandmap)
 #library(zoo, quietly = TRUE, warn.conflicts = FALSE)
 #library(ggplot2, quietly = TRUE, warn.conflicts = FALSE)
 #library(bindrcpp, quietly=TRUE, warn.conflicts=FALSE)
@@ -100,6 +101,39 @@ server <- function(input, output) {
     )
     stepsForward <- min(length(pages), max(0, input$nextPage + 1 - input$prevPage))
     pages[stepsForward]
+  })
+  
+  output$mapImage <- renderPlot({
+    codes <- c()
+    wts <- c()
+    for (i in 1:getMaxNaicsInputs()) {
+      if (is.na(getNthNaicsCode(i))) break
+      codes[i] <- getNthNaicsCode(i)
+      wts[i] <- getNthNaicsWt(i)
+    }
+    
+    rawData <- demandmap::getData()
+    indWts <- demandmap::makeWeightsInput(
+      labels=codes,
+      weights=wts
+    )
+    metWts <- demandmap::makeWeightsInput(
+      labels=c('ESTAB', 'EMP'),
+      weights=c(0.5, 0.5)
+    )
+
+    stateScores <- data2stateScores(
+      rawData,
+      industryWeights=indWts,
+      metricWeights=metWts
+    )
+    
+    gg <- demandmap::plotDemandMap(
+      stateScoresData=stateScores,
+      mapData=ggplot2::map_data('state')
+    )
+
+    gg
   })
 }
 
