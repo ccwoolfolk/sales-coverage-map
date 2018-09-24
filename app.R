@@ -12,25 +12,8 @@ library(dplyr, quietly = TRUE, warn.conflicts = FALSE)
 #library(rlang)
 
 source('defaultValues.R')
+source('dataHelpers.R')
 
-mfg <- read_excel(
-  paste('full-mfg.xlsx', sep=''),
-  col_types = 'text'
-)
-
-# Remove the header description row
-mfg <- mfg[-1, ]
-
-### Create a list of unique NAICS codes
-allNaicsCodes <- mfg %>% pull(NAICS.id)
-naicsCodes <- unique(allNaicsCodes)
-uniqueRows <- match(naicsCodes, allNaicsCodes)
-naicsNames <- (mfg %>% pull(`NAICS.display-label`))[uniqueRows]
-naicsLabels <- paste(str_pad(naicsCodes, width=max(nchar(naicsCodes)), side='right', '_'), naicsNames, sep=' : ')
-getNaicsLabels <- function(codes) {
-  idxs <- match(codes, table=naicsCodes)
-  return(naicsNames[idxs])
-}
 
 source('ui/navButtonContainer.R')
 source('ui/industrySelectionPage.R')
