@@ -103,7 +103,7 @@ server <- function(input, output) {
     pages[stepsForward]
   })
   
-  output$mapImage <- renderPlot({
+  getStateScores <- function () {
     codes <- c()
     wts <- c()
     for (i in 1:getMaxNaicsInputs()) {
@@ -121,12 +121,17 @@ server <- function(input, output) {
       labels=c('ESTAB', 'EMP'),
       weights=c(0.5, 0.5)
     )
-
+    
     stateScores <- data2stateScores(
       rawData,
       industryWeights=indWts,
       metricWeights=metWts
     )
+  }
+  
+  output$mapImage <- renderPlot({
+    
+    stateScores <- getStateScores()
     
     gg <- demandmap::plotDemandMap(
       stateScoresData=stateScores,
@@ -135,6 +140,25 @@ server <- function(input, output) {
 
     gg
   })
+  
+  # This feeds the download button for the map data
+  mapDataInput <- reactive({
+    setNames(
+      getStateScores()[ , c('state', 'printScore')],
+      c('State', 'Score')
+    )
+  })
+
+  output$mapDownloadData <- downloadHandler(
+    filename=function() { paste0('demand-map-data_', Sys.Date(), '.csv' )},
+    content=function(file) {
+      write.csv(
+        mapDataInput(),
+        file,
+        row.names=FALSE
+      )
+    }
+  )
 }
 
 # Run the application 

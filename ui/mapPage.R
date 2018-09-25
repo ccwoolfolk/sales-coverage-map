@@ -1,3 +1,6 @@
 makeMapPageUI <- function () {
-  imageOutput('mapImage')
+  list(
+    imageOutput('mapImage'),
+    downloadButton('mapDownloadData', 'Download Excel Data')
+  )
 }
