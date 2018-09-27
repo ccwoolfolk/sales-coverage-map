@@ -1,20 +1,9 @@
 library(shiny)
 library(stringr)
-library(readxl, quietly = TRUE, warn.conflicts = FALSE)
-library(tidyr, quietly = TRUE, warn.conflicts = FALSE)
-library(dplyr, quietly = TRUE, warn.conflicts = FALSE)
 library(demandmap)
-#library(zoo, quietly = TRUE, warn.conflicts = FALSE)
-#library(ggplot2, quietly = TRUE, warn.conflicts = FALSE)
-#library(bindrcpp, quietly=TRUE, warn.conflicts=FALSE)
-#library(quantmod)
-#library(plotrix)
-#library(maps)
-#library(rlang)
 
 source('defaultValues.R')
 source('dataHelpers.R')
-
 
 source('ui/navButtonContainer.R')
 source('ui/industrySelectionPage.R')
