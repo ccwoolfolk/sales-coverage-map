@@ -1,7 +1,7 @@
 getDefaultValues <- function() {
   list(
-    naicsCodes=c(311211, 325193, 311111),
-    naicsWeights=c(50, 25, 25)
+    naicsCodes=c(3111, 31121, 325193, 327),
+    naicsWeights=c(0.2, 0.4, 0.1, 0.2)*100
   )
 }
 
